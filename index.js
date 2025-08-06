@@ -2,10 +2,10 @@ const TelegramBot = require('node-telegram-bot-api');
 const { initializeApp } = require('firebase/app');
 const { getFirestore, doc, setDoc } = require('firebase/firestore');
 
-// Token bota z zmiennej środowiskowej Render
+// Token bota pobierany ze zmiennej środowiskowej na Renderze
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
-// Konfiguracja Firebase (Twoja)
+// Twoja konfiguracja Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD2t9ZsPOX16nfrzfpzPxfthD0puXKrm1M",
   authDomain: "hydra-black-global.firebaseapp.com",
@@ -19,9 +19,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Inicjalizacja bota
+// Inicjalizacja bota z pollingiem
 const bot = new TelegramBot(token, { polling: true });
 
+// Obsługa komendy /start
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
@@ -29,7 +30,7 @@ bot.onText(/\/start/, async (msg) => {
   const firstName = msg.from.first_name || '';
 
   try {
-    // Zapisz użytkownika w Firestore pod dokumentem o ID userId
+    // Zapisz użytkownika w Firestore w kolekcji "users"
     await setDoc(doc(db, "users", String(userId)), {
       userName,
       firstName,
@@ -44,4 +45,4 @@ bot.onText(/\/start/, async (msg) => {
   }
 });
 
-console.log('Bot z Firebase uruchomiony. Czekam na wiadomości...');
+console.log('Bot z Firebase uruchomiony.');
