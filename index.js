@@ -1,8 +1,12 @@
+const express = require('express');
+const app = express();
+const PORT = process.env.PORT || 3000;
+
 const TelegramBot = require('node-telegram-bot-api');
 const { initializeApp } = require('firebase/app');
 const { getFirestore, doc, setDoc } = require('firebase/firestore');
 
-// Token bota pobierany ze zmiennej środowiskowej na Renderze
+// Token bota z Render jako zmienna środowiskowa
 const token = process.env.TELEGRAM_BOT_TOKEN;
 
 // Twoja konfiguracja Firebase
@@ -15,14 +19,11 @@ const firebaseConfig = {
   appId: "1:800376499112:web:454e3921ffa6ac2dba8b9d"
 };
 
-// Inicjalizacja Firebase i Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
 
-// Inicjalizacja bota z pollingiem
 const bot = new TelegramBot(token, { polling: true });
 
-// Obsługa komendy /start
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
@@ -30,19 +31,25 @@ bot.onText(/\/start/, async (msg) => {
   const firstName = msg.from.first_name || '';
 
   try {
-    // Zapisz użytkownika w Firestore w kolekcji "users"
     await setDoc(doc(db, "users", String(userId)), {
       userName,
       firstName,
       chatId,
       joinedAt: new Date().toISOString()
     });
-
     bot.sendMessage(chatId, 'Cześć! Zarejestrowałem Cię w systemie HydraBlackBot.');
   } catch (error) {
     console.error("Błąd zapisu do Firestore:", error);
     bot.sendMessage(chatId, 'Ups, coś poszło nie tak podczas rejestracji.');
   }
+});
+
+app.get('/', (req, res) => {
+  res.send('HydraBlackBot działa poprawnie!');
+});
+
+app.listen(PORT, () => {
+  console.log(`Serwer działa na porcie ${PORT}`);
 });
 
 console.log('Bot z Firebase uruchomiony.');
